@@ -1,0 +1,25 @@
+FROM intel/intel-optimized-tensorflow:1.15.2
+SHELL ["/bin/bash", "-c"]
+WORKDIR /app
+COPY requirements-cpu.txt ./requirements.txt
+RUN sed -i '/tensorflow/d' ./requirements.txt
+RUN apt-get clean && apt-get update && apt-get install -y locales && locale-gen en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY *.py ./
+COPY Parser-v2 ./Parser-v2
+COPY tokenizer ./tokenizer
+COPY universal-lemmatizer ./universal-lemmatizer
+COPY docker_entry_point.sh list_models.sh ./
+
+ARG MODEL=fi_tdt
+ARG PIPELINE=parse_plaintext
+ARG PORT=7689
+ARG MAXCHAR=0
+ENV TNPP_MODELNAME ${MODEL}
+ENV TNPP_PIPELINE ${PIPELINE}
+ENV TNPP_PORT ${PORT}
+ENV TNPP_MAXCHAR ${MAXCHAR}
+RUN python3 fetch_models.py $MODEL
+CMD python full_pipeline_server.py --host 0.0.0.0 --max-char ${TNPP_MAXCHAR} --port ${TNPP_PORT} --conf "models_${TNPP_MODELNAME}/pipelines.yaml" --gpu -1 "${TNPP_PIPELINE}"

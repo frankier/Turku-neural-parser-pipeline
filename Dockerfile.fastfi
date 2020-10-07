@@ -22,4 +22,5 @@ ENV TNPP_PIPELINE ${PIPELINE}
 ENV TNPP_PORT ${PORT}
 ENV TNPP_MAXCHAR ${MAXCHAR}
 RUN python3 fetch_models.py $MODEL
+EXPOSE ${PORT}
 CMD python full_pipeline_server.py --host 0.0.0.0 --max-char ${TNPP_MAXCHAR} --port ${TNPP_PORT} --conf "models_${TNPP_MODELNAME}/pipelines.yaml" --gpu -1 "${TNPP_PIPELINE}"
